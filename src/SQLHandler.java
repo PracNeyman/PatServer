@@ -22,6 +22,12 @@ public class SQLHandler {
     public static Statement query;
     public static Connection con;
 
+    public static void init() throws ClassNotFoundException, IllegalAccessException, InstantiationException, SQLException {
+        Class.forName("com.mysql.jdbc.Driver").newInstance();
+        con = DriverManager.getConnection(url,username,password);
+        query = con.createStatement();
+    }
+
 
     public static void insertUser(UserNode userNode) throws SQLException {
         PreparedStatement insert_user = con.prepareStatement(UserNodeInsert);
@@ -34,7 +40,8 @@ public class SQLHandler {
 
     /**根据邮箱和密码查询用户是否存在，若存在，则返回用户ID，否则返回字符串NOTFIND**/
     public static String isUserExistedByUserNode(UserNode userNode)throws SQLException{
-        String sql = "select * from CLIENTNODES where email = \'" + userNode.getEmail() + "\' and password = \'" + userNode.getPassword() + "\'";
+        String sql = "select * from CLIENTNODES where email = \'" + userNode.getEmail() + "\' and password = \'" + userNode.getPassword() + "\';";
+        System.out.println(sql);
         ResultSet resultSet = query.executeQuery(sql);
         if (resultSet.next()){//不为空
             return resultSet.getString("user_id");

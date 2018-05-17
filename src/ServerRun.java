@@ -24,13 +24,14 @@ public class ServerRun extends Thread{
         return userMap;
     }
 
-    public ServerRun(int port){
+    public ServerRun(int port) throws ClassNotFoundException, SQLException, InstantiationException, IllegalAccessException {
         this.serverPort = port;
         try {
             serverSocket = new ServerSocket(port);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        SQLHandler.init();
     }
 
     @Override
@@ -103,10 +104,10 @@ class ServerManiputify extends Thread{
                 int purpose = json.getInt("purpose");
                 JSONObject rtnMsg = null;
                 switch (purpose){
-                    case 0:
+                    case 0://注册后要断开socket
                         rtnMsg = ServerAction.doRegister(json);
                         break;
-                    case 1:
+                    case 1://登录失败后要断开socket
                         rtnMsg = ServerAction.doLogin(json);
                         break;
                     case 2:
