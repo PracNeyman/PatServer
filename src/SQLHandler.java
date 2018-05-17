@@ -321,4 +321,66 @@ public class SQLHandler {
         }
         return result;
     }
+
+    //根据群组的id去查找群组
+    public static GroupNode queryGroupByGroupId(String id){
+        String sql = "select * from groups where group_id = '"+id+"';";
+        try{
+            ResultSet resultSet = query.executeQuery(sql);
+            if(resultSet.next()){
+                String group_name = resultSet.getString("group_name");
+                String data_type = resultSet.getString("data_type");
+                String group_id = resultSet.getString("group_id");
+                int member_nums = resultSet.getInt("member_nums");
+                String creator_id = resultSet.getString("creator_id");
+                Date date = resultSet.getDate("create_date");
+                String description = resultSet.getString("description");
+                /**这里不能插入一段查询，因为若在resultSet还没关闭时进行一次查询，前一个resultSet就会被强制关闭**/
+                //UserNode owner = SQLHandler.queryUserByID(creator_id);
+                /**构建群结点**/
+                GroupNode temp = new GroupNode();
+                temp.setGroup_name(group_name);
+                temp.setType(data_type);
+                temp.setGroup_id(group_id);
+                temp.setOwner_id(creator_id);
+                temp.setMember_num(member_nums);
+                temp.setCreat_date(date);
+                temp.setDescription(description);
+                return temp;
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+            return null;
+        }
+        return null;
+    }
+
+    //查询一个ID是否已经存在,-1表示出错，0表示不存在，1表示存在
+    public static int isExistID(String type, String id){
+
+        String sql;
+        switch (type){
+            case "user":
+                sql = "SELECT * from clientnodes where user_id = '"+id+"';";
+                break;
+            case "group":
+                sql = "SELECT * from groups where group_id = '"+id+"';";
+                break;
+            case "task":
+                sql = "SELECT  * from computetask where task_id = '"+id+"';";
+                break;
+            default:
+                return -1;
+        }
+        try {
+            ResultSet rs = query.executeQuery(sql);
+            if(rs.next()){
+                return 1;
+            }else
+                return 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
 }

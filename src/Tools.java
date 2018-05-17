@@ -1,5 +1,9 @@
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 public class Tools {
     //list转化为str
@@ -26,5 +30,23 @@ public class Tools {
         //拿逗号分隔开连接的字符串
         String[] strs = str.split(",");
         return Arrays.asList(strs);
+    }
+
+    //获得一个从来没使用过的随机数
+    public static String getRandomID(String type){
+        boolean foundFreeID = false;
+        String testID = "";
+        while(!foundFreeID) {
+            testID = "";
+            Random rand = new Random();
+            for (int i = 0; i < 10; i++) {
+                testID += String.valueOf(rand.nextInt(10));
+            }
+            int rs = SQLHandler.isExistID(type,testID);
+            if(rs == -1)  return null;
+            else if (rs==0) foundFreeID = true;
+            else foundFreeID = false;
+        }
+        return testID;
     }
 }
