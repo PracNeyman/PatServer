@@ -113,17 +113,27 @@ class ServerManiputify extends Thread{
                             rtnMsg = ServerAction.doQueryDataNodesByGroupId(json);
                             break;
                         case 9:
-                            rtnMsg = ServerAction.doTask(json, userMap);
+                            rtnMsg = ServerAction.doTask(json);
                             break;
                         case 10:
-                            rtnMsg = ServerAction.doProcessMsg(json);//还得修改
+                            rtnMsg = ServerAction.doPowerSlaver(json,userMap);
+                            break;
                         case 11:
-                            rtnMsg = ServerAction.doStop(json);
+                            rtnMsg = ServerAction.doProcessMsg(json,userMap);
+                            break;
+                        case 12:
+                            rtnMsg = ServerAction.doStop(json,userMap);
+                            break;
+                        case 13:
+                            rtnMsg = ServerAction.doQueryDataNameByUserIdAndGroupId(json);
+                            break;
                         default://请求不合法
                             rtnMsg = new JSONObject().put("result", 0);
                     }
-                    dataOutputStream.write(rtnMsg.toString().getBytes());
-                    dataOutputStream.flush();
+                    if(rtnMsg.keys().hasNext()) {
+                        dataOutputStream.write(rtnMsg.toString().getBytes());
+                        dataOutputStream.flush();
+                    }
                 }catch (JSONException e){
                     HashMap<String,Object> hm = new HashMap<>();
                     hm.put("result",0);

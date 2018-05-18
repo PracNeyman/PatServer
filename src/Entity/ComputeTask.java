@@ -13,6 +13,8 @@ public class ComputeTask extends RecursiveTreeObject<DataNode> {
     private int state;
     private UserNode initiator;
     private String task_name;
+    private String group_id;
+    private String code;
 
     public String getTask_name() {
         return task_name;
@@ -23,6 +25,20 @@ public class ComputeTask extends RecursiveTreeObject<DataNode> {
     }
 
     public ComputeTask() {
+    }
+    public ComputeTask(String task_id,String data_type,double cost,String initiator_id,double security_score,
+                       String start_time,String end_time, int state,String task_name, String group_id, String code){
+        this.task_id = task_id;
+        this.data_type = data_type;
+        this.cost = cost;
+        this.initiator_id =initiator_id;
+        this.security_score = security_score;
+        this.start_time = start_time;
+        this.end_time = end_time;
+        this.state = state;
+        this.task_name = task_name;
+        this.group_id = group_id;
+        this.code = code;
     }
 
     public String getTask_id() {
@@ -95,5 +111,21 @@ public class ComputeTask extends RecursiveTreeObject<DataNode> {
 
     public void setInitiator(UserNode initiator) {
         this.initiator = initiator;
+    }
+
+    public String getGroup_id() {
+        return group_id;
+    }
+
+    public void setGroup_id(String group_id) {
+        this.group_id = group_id;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 }

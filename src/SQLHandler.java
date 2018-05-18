@@ -19,6 +19,7 @@ public class SQLHandler {
     public static String GroupUserRelationInsert = "INSERT INTO belongs_to (user_id, group_id) values (?,?)";
     public static String GroupDataRegisterRelationInsert = "INSERT INTO contain (group_id, user_id, dataset_name) values (?,?,?)";
     public static String ComputeTaskInsert = "INSERT INTO COMPUTETASK(task_id, data_type, cost, initiator_id, security_score, start_time, end_time, state, task_name) values(?,?,?,?,?,?,?,?,?)";
+    public static String WorksOnInsert = "insert into works_on (task_id, slaver_id) values(?,?)";
     public static Statement query;
     public static Connection con;
 
@@ -50,7 +51,7 @@ public class SQLHandler {
 
     /**根据用户id查询用户，若找到返回UserNode，否则返回null**/
     public static UserNode queryUserByID(String user_id){
-        String sql = "SELECT * from CLIENTNODES where user_id = " + user_id;
+        String sql = "SELECT * from CLIENTNODES where user_id = '" + user_id+"';";
         try {
             ResultSet resultSet = query.executeQuery(sql);
             UserNode userNode = new UserNode();
@@ -329,6 +330,14 @@ public class SQLHandler {
         return result;
     }
 
+    //把slaver和task的工作关系插入到works_on中
+    public static void insertWorksOn(String taskId,String slaverId) throws SQLException {
+        PreparedStatement insert_works_on = con.prepareStatement(WorksOnInsert);
+        insert_works_on.setString(1, taskId);
+        insert_works_on.setString(2,slaverId);
+        insert_works_on.executeUpdate();
+    }
+
     //根据群组的id去查找群组
     public static GroupNode queryGroupByGroupId(String id){
         String sql = "select * from groups where group_id = '"+id+"';";
@@ -389,5 +398,66 @@ public class SQLHandler {
             e.printStackTrace();
         }
         return -1;
+    }
+
+
+    /**根据task_id查找task**/
+    public static ComputeTask queryTaskByTaskId(String task_id){
+        String sql = "select * from computetask where task_id = '"+task_id+"';";
+        ComputeTask computeTask = null;
+        try {
+            ResultSet rs = query.executeQuery(sql);
+            if(rs.next()){
+                String data_type = rs.getString("data_type");
+                Double cost = rs.getDouble("cost");
+                String initiator_id = rs.getString("initiator_id");
+                Double securityScore = rs.getDouble("security_score");
+                String startTime = rs.getString("start_time");
+                String endTime = rs.getString("end_time");
+                int state = rs.getInt("state");
+                String taskName = rs.getString("task_name");
+                String groupId = rs.getString("group_id");
+                String code = rs.getString("code");
+                computeTask = new ComputeTask(task_id,data_type,cost,initiator_id,securityScore,startTime,endTime,
+                        state,taskName,groupId,code);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return computeTask;
+    }
+
+    /*根据用户id和群组id来查到数据集*/
+    public static ArrayList<String> queryDataSetNameByUserIdAndGroupID(String user_id, String group_id) {
+        String sql = "SELECT dataset_name FROM contain WHERE group_id = '" + group_id + "' and user_id = '" + user_id+"';";
+        ArrayList<String> result = new ArrayList<String>();
+        try {
+            ResultSet resultSet = query.executeQuery(sql);
+            while (resultSet.next()) {
+                String temp = resultSet.getString("dataset_name");
+                result.add(temp);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return result;
+    }
+
+    /** 根据task_id找到对应的所有slaver_id*/
+    public static ArrayList<String> querySlaverIdByTaskId(String taskId){
+        String sql = "select slaver_id from works_on where task_id = " + taskId;
+        ArrayList<String> result = new ArrayList<String>();
+        try {
+            ResultSet resultSet = query.executeQuery(sql);
+            while (resultSet.next()) {
+                String temp = resultSet.getString("slaver_id");
+                result.add(temp);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return result;
     }
 }
