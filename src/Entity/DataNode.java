@@ -20,7 +20,7 @@ public class DataNode extends RecursiveTreeObject<DataNode> {
         this.file_path = file_path;
     }
 
-    /**这个构造函数是专门为了queryRegisterdDataNodesByID函数构建的
+    /**这个构造函数是专门为了queryRegisterdDataNodesByGroupID函数构建的
      * 平时尽量不要用这个**/
     public DataNode(String data_name, int row_nums, int attr_nums, String user_name) {
         this.data_name = data_name;

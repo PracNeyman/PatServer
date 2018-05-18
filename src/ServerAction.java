@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ServerAction {
 
@@ -89,7 +90,7 @@ public class ServerAction {
             String dataType = json.getString("data_type");
             String description = json.getString("description");
             //是否应该有member_num???????????????????????????????????????/
-//            int memberNum = json.getInt("member_num");
+            int memberNum = json.getInt("member_nums");
 
             String groupId = Tools.getRandomID("group");
             UserNode userNode = SQLHandler.queryUserByID(creatorId);
@@ -99,6 +100,9 @@ public class ServerAction {
             else {
                 GroupNode groupNode = new GroupNode(groupId, groupName, dataType);
                 groupNode.setOwner(userNode);
+                groupNode.setOwner_id(creatorId);
+                groupNode.setDescription(description);
+                groupNode.setMember_num(memberNum);
                 SQLHandler.insertGroup(groupNode);
                 hashMap.put("result",1);
                 hashMap.put("group_id",groupId);
@@ -209,21 +213,22 @@ public class ServerAction {
             String groupId = json.getString("group_id");
             String userId = json.getString("user_id");
             String dataName = json.getString("data_name");
-
+            String dataType = json.getString("data_type");
             DataNode dataNode = new DataNode();
             dataNode.setUser_id(userId);
             dataNode.setData_name(dataName);
+            dataNode.setData_type(dataType);
 
             //DataNode 在构造时，尽量不使用下面的几个属性么？？？？？？？？？？？？？？？？？？？？？？？？？？
-//            String dataType = json.getString("data_type");
 //            String rowNums = json.getString("row_nums");
 //            String attrNums = json.getString("attr_nums");
 //            String filePath = json.getString("file_path");
 
             //假设这里一定能找到群组吧
             GroupNode groupNode = SQLHandler.queryGroupByGroupId(groupId);
-            boolean success = SQLHandler.insertGroupDataRegisterRelation(groupNode,dataNode);
-            if(success){
+            boolean success2 = SQLHandler.insertGroupDataRegisterRelation(groupNode,dataNode);
+            boolean success1 = SQLHandler.insertDataNode(dataNode);
+            if(success1&success2){
                 hashMap.put("result",1);
             }else{
                 hashMap.put("result",0);
@@ -240,7 +245,7 @@ public class ServerAction {
         HashMap<String, Object> hashMap = new HashMap<>();
         JSONObject jsonObject = new JSONObject();
         try{
-            List<DataNode>  dataNodes = SQLHandler.queryRegisterdDataNodesByID(json.getString("group_id"));
+            List<DataNode>  dataNodes = SQLHandler.queryRegisterdDataNodesByGroupID(json.getString("group_id"));
             if(dataNodes==null||dataNodes.size()==0){
                 jsonObject.put("result",0);
 //                hashMap.put("result",0);
@@ -272,13 +277,14 @@ public class ServerAction {
     }
 
     //处理任务创建,设置现在就返回IP
-    public static JSONObject doTask(JSONObject json, List<Socket> sockets){
+    public static JSONObject doTask(JSONObject json, Map<String,Socket> userMap){
         JSONObject jsonObject = new JSONObject();
         HashMap<String,Object> hashMap = new HashMap<>();
         try{
             String taskId = Tools.getRandomID("task");
             String taskName = json.getString("task_name");
             String initiatorId = json.getString("initiator_id");
+            String groupId = json.getString("group_id");
             ComputeTask computeTask = new ComputeTask();
             //因为这里只有一种构造方法，所以只能用set
             computeTask.setInitiator_id(initiatorId);
@@ -287,25 +293,34 @@ public class ServerAction {
             Boolean success = SQLHandler.insertComputeTask(computeTask);
             if(success){
                 jsonObject.put("task_id",taskId);
-                List<String> IPs = new ArrayList<>();
+                List<String> slavers = new ArrayList<>();
                 JSONObject powerMsg = doPowerSlaver();
                 powerMsg.put("result",2);
-                for(Socket socket : sockets) {
-                    if(socket.isConnected()) {
+                List<DataNode> dataNodes = SQLHandler.queryRegisterdDataNodesByGroupID(groupId);
+                for(DataNode dataNode : dataNodes) {
+                    String slaverId = dataNode.getUser_id();
+                    Socket socket = userMap.get(slaverId);
+                    if(socket!=null && socket.isConnected()) {
                         DataOutputStream dataOutputStream = null;
                         try {
                             dataOutputStream = new DataOutputStream(socket.getOutputStream());
                             dataOutputStream.write(powerMsg.toString().getBytes());
                             dataOutputStream.flush();
-                            IPs.add(socket.getInetAddress().getHostAddress());
+
+
+                            //这里需要把任务添加到到works_on ,但是有一些问题，目前的works_on是task_id和 group_id，
+                            //一个group中可能只有部分人在线，我想是不是应该加上 slaver_id 呢？？？？？？？，另外group_id，可以直接放到computetask表中去
+
+
+                            slavers.add(slaverId);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
                 }
-                if(!IPs.isEmpty()) {
+                if(!slavers.isEmpty()) {
                     jsonObject.put("result",1);
-                    jsonObject.put("IPs", new JSONArray(IPs.toArray()));
+                    jsonObject.put("slavers_id", new JSONArray(slavers.toArray()));
                 }else {
                     jsonObject.put("result",0);
                 }

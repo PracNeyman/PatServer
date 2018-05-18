@@ -28,7 +28,6 @@ public class SQLHandler {
         query = con.createStatement();
     }
 
-
     public static void insertUser(UserNode userNode) throws SQLException {
         PreparedStatement insert_user = con.prepareStatement(UserNodeInsert);
         insert_user.setString(1, userNode.getUser_name());
@@ -98,7 +97,7 @@ public class SQLHandler {
             insertGroup.setInt(4, groupNode.getMember_num());
             insertGroup.setString(5, groupNode.getOwner_id());
             insertGroup.setDate(6, groupNode.getCreat_date());
-            insertGroup.setString(7, groupNode.getDescription());
+            insertGroup.setString(7, groupNode.getDescription()); //插入中文会出错
             insertGroup.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -244,14 +243,15 @@ public class SQLHandler {
     /**根据group_id,获取所有的在群组中注册了的数据
      * 若查询失败，则返回null
      * 否则至少返回一个长度为0的数组**/
-    public static ArrayList<DataNode> queryRegisterdDataNodesByID(String group_id){
+    public static ArrayList<DataNode> queryRegisterdDataNodesByGroupID(String group_id){
         ArrayList<DataNode> result = new ArrayList<DataNode>();
         try {
             String sql = "SELECT s1.dataset_name, s2.row_nums, s2.attr_nums, s3.user_name " +
                     "FROM (contain as s1 JOIN DATANODES as s2 ON " +
                     "(s1.user_id = s2.user_id and s1.dataset_name = s2.data_name) ) " +
                     "JOIN CLIENTNODES as s3 ON s1.user_id = s3.user_id " +
-                    "where s1.group_id = " + group_id;
+                    "where s1.group_id = '" + group_id+"';";
+            System.out.println(sql);
             ResultSet resultSet = query.executeQuery(sql);
             while (resultSet.next()){
                 DataNode dataNode = new DataNode(
